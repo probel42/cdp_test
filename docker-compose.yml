@@ -36,7 +36,7 @@ services:
       GRAYLOG_ROOT_PASSWORD_SHA2: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" # password
       GRAYLOG_PASSWORD_SECRET: "KRTEjf3C427FHgkW"
     ports:
-      - "9001:9000" # Веб-интерфейс
+      - "9000:9000" # Веб-интерфейс
       - "12201:12201/udp" # Gelf UDP
 
   graylog-setup:
