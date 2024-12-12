@@ -1,0 +1,57 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: graylog-mongo
+    networks:
+      - graylog-network
+    ports:
+      - 27017:27017
+
+  elasticsearch:
+    image: opensearchproject/opensearch:2.10.0
+    container_name: graylog-opensearch
+    networks:
+      - graylog-network
+    environment:
+      - "discovery.type=single-node"
+      - "plugins.security.disabled=true"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  graylog:
+    image: graylog/graylog:5.1
+    container_name: graylog
+    networks:
+      - graylog-network
+    depends_on:
+      - mongo
+      - elasticsearch
+    environment:
+      GRAYLOG_OPENSEARCH_HOSTS: "http://elasticsearch:9200"
+      GRAYLOG_HTTP_EXTERNAL_URI: "http://127.0.0.1:9000/"
+      GRAYLOG_ROOT_USERNAME: "admin"
+      GRAYLOG_ROOT_PASSWORD_SHA2: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" # password
+      GRAYLOG_PASSWORD_SECRET: "KRTEjf3C427FHgkW"
+    ports:
+      - "9001:9000" # Веб-интерфейс
+      - "12201:12201/udp" # Gelf UDP
+
+  graylog-setup:
+    image: debian:bullseye-slim
+    container_name: graylog-setup
+    networks:
+      - graylog-network
+    depends_on:
+      - graylog
+    volumes:
+      - ./graylog-setup.sh:/graylog-setup.sh
+    entrypoint: >
+      bash -c "apt-get update && 
+               apt-get install -y curl && 
+               bash /graylog-setup.sh"
+
+networks:
+  graylog-network:
